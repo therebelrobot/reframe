@@ -1,0 +1,16 @@
+{
+  "name": "Reframe",
+  "short_name": "Reframe",
+  "description": "Private thought record journal",
+  "start_url": "/#/entries",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ECEFE9",
+  "theme_color": "#1F3A35",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" }
+  ],
+  "shortcuts": [{ "name": "Log a moment", "url": "/#/log" }]
+}

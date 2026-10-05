@@ -1,0 +1,39 @@
+name: release
+on:
+  push:
+    tags: ['v*']
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      # Pin these to full commit SHAs (e.g. with pin-github-action); Dependabot keeps them current.
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npm run typecheck
+      - run: npm test
+
+  image:
+    needs: test
+    # Shared multi-arch build: linux/amd64 + linux/arm64, semver tags,
+    # signed SLSA provenance via actions/attest-build-provenance.
+    uses: therebelrobot/.github/.github/workflows/docker-build.yml@REPLACE_WITH_COMMIT_SHA # pin!
+    with:
+      image-name: reframe
+      dockerfile: ./Dockerfile
+      context: .
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+      attestations: write

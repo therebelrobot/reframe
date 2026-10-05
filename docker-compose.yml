@@ -1,0 +1,30 @@
+# Reframe behind Nginx Proxy Manager (or any TLS-terminating reverse proxy).
+# Do not publish this port to the internet directly: the session cookie is Secure-only,
+# so the app only works over HTTPS.
+services:
+  reframe:
+    image: ghcr.io/therebelrobot/reframe:0.1
+    container_name: reframe
+    restart: unless-stopped
+    environment:
+      REFRAME_TRUST_PROXY: "true"
+      REFRAME_PUBLIC_ORIGIN: "https://journal.example.com"
+      # Optional: choose the one-time setup token instead of reading it from the logs.
+      # REFRAME_SETUP_TOKEN: "change-me"
+      REFRAME_SESSION_IDLE_MINUTES: "30"
+      REFRAME_SESSION_MAX_HOURS: "12"
+    volumes:
+      - ./reframe-data:/app/data
+    # Only reachable from the proxy's network / the host. Adjust to your setup.
+    ports:
+      - "127.0.0.1:8787:8787"
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    # The container runs as uid 1000 (node). If ./reframe-data is owned by another
+    # user on the host, chown it to 1000:1000 or set `user:` to match.
+    mem_limit: 512m
