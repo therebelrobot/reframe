@@ -3,7 +3,7 @@
 # so the app only works over HTTPS.
 services:
   reframe:
-    image: ghcr.io/therebelrobot/reframe:0.1
+    image: ghcr.io/therebelrobot/reframe:latest
     container_name: reframe
     restart: unless-stopped
     environment:
