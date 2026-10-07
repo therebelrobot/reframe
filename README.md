@@ -11,21 +11,47 @@ docker compose up -d
 docker logs reframe   # prints the one-time setup token on first start
 ```
 
+The compose file reads its settings from a `.env` file next to it, so you do not
+have to edit `docker-compose.yml` to change the token, the public origin, or the
+host port. Copy the template and edit it:
+
+```sh
+cp .env.example .env
+# edit .env, then recreate the container so the new values are applied:
+docker compose up -d --force-recreate
+```
+
+`docker compose up -d` alone is not enough after you change `.env` only if the
+container is already running and compose cannot see the change; `--force-recreate`
+always applies the current `.env`. The compose file pulls
+`ghcr.io/therebelrobot/reframe:latest`; if you have edited the code or the
+`Dockerfile`, rebuild locally (add a `build: .` to the service, or use
+`npm run docker:build`) so your changes are in the image.
+
 Put it behind Nginx Proxy Manager (or any TLS-terminating proxy) at something like `https://journal.example.com`, then open it on your phone and use **Add to Home Screen**. It must be served over HTTPS: the session cookie is `Secure`-only.
 
 Proxy settings that matter:
 - Forward to `<docker-host>:8787`, enable **Force SSL** and **HSTS**.
+- If the proxy runs on a **different host** than the container, set `REFRAME_BIND_ADDRESS=0.0.0.0` so the published port is reachable over the LAN. The default `127.0.0.1` publishes the port only on the container's host, so a proxy on another machine (or in another Docker network) gets connection refused. Security tradeoff: `0.0.0.0` exposes the port to every device on the network; prefer running the proxy on the same host and leaving the default.
 - Set `REFRAME_TRUST_PROXY=true` so rate limiting sees the real client IP (taken from the rightmost `X-Forwarded-For` hop, the one your proxy appends).
 - Set `REFRAME_PUBLIC_ORIGIN` to the exact public origin; state-changing requests from any other `Origin` are refused.
 - Consider restricting it to your LAN or VPN in the proxy (access list). There is no reason for a personal journal to be reachable from the whole internet.
 
 ### Configuration
 
+In Docker, set these in the `.env` file next to `docker-compose.yml` (see
+`.env.example`); compose interpolates them into the container environment.
+Outside Docker they are read from the process environment at startup. Changing a
+variable only takes effect after the server process restarts (in Docker:
+`docker compose up -d --force-recreate`).
+
 | Variable | Default | What it does |
 |---|---|---|
-| `REFRAME_PORT` | `8787` | Listen port |
+| `REFRAME_HOST_PORT` | `8787` | Host port the container is published on (compose only). The container always listens on `8787`; this changes only the host side. |
+| `REFRAME_BIND_ADDRESS` | `127.0.0.1` | Host interface the port is published on (compose only). `127.0.0.1` = this host only; `0.0.0.0` = all interfaces (LAN-reachable, needed when the reverse proxy is on another host). |
+| `REFRAME_PORT` | `8787` | Listen port inside the container. Fixed at `8787` in the published image, so leave the compose port target at `8787`. |
 | `REFRAME_DATA_DIR` | `./data` (`/app/data` in Docker) | Where `reframe.db` lives |
-| `REFRAME_SETUP_TOKEN` | random, logged at start | Required to create the journal, so nobody else can claim a fresh instance |
+| `REFRAME_SETUP_TOKEN` | random, logged at start | Required to create the journal, so nobody else can claim a fresh instance. Only checked while the journal does not exist yet; once it is set up, changing this has no effect. |
 | `REFRAME_TRUST_PROXY` | `false` | Read client IPs from `X-Forwarded-For` |
 | `REFRAME_PUBLIC_ORIGIN` | from `Host` | Expected `Origin` for state-changing requests |
 | `REFRAME_COOKIE_SECURE` | `true` | `false` only for local development over plain HTTP |

@@ -6,18 +6,28 @@ services:
     image: ghcr.io/therebelrobot/reframe:latest
     container_name: reframe
     restart: unless-stopped
+    # Values interpolate from the shell or a .env file next to this file, so you can
+    # change them without editing this file (copy .env.example to .env). Each default
+    # matches what the server uses when the variable is unset.
     environment:
-      REFRAME_TRUST_PROXY: "true"
-      REFRAME_PUBLIC_ORIGIN: "https://journal.example.com"
+      REFRAME_TRUST_PROXY: "${REFRAME_TRUST_PROXY:-true}"
+      REFRAME_PUBLIC_ORIGIN: "${REFRAME_PUBLIC_ORIGIN:-https://journal.example.com}"
       # Optional: choose the one-time setup token instead of reading it from the logs.
-      # REFRAME_SETUP_TOKEN: "change-me"
-      REFRAME_SESSION_IDLE_MINUTES: "30"
-      REFRAME_SESSION_MAX_HOURS: "12"
+      # Only consulted before the journal exists; ignored once it has been set up.
+      REFRAME_SETUP_TOKEN: "${REFRAME_SETUP_TOKEN:-}"
+      REFRAME_SESSION_IDLE_MINUTES: "${REFRAME_SESSION_IDLE_MINUTES:-30}"
+      REFRAME_SESSION_MAX_HOURS: "${REFRAME_SESSION_MAX_HOURS:-12}"
     volumes:
       - ./reframe-data:/app/data
-    # Only reachable from the proxy's network / the host. Adjust to your setup.
+    # REFRAME_BIND_ADDRESS is the host interface the port is published on. The
+    # default 127.0.0.1 keeps it reachable only from this host (and a proxy running
+    # on it). Set it to 0.0.0.0 to expose the port on the LAN so a reverse proxy on
+    # another host can reach it — that also exposes it to every device on the
+    # network, so prefer the on-host proxy path for the public domain.
+    # REFRAME_HOST_PORT changes only the host side; the container always listens on
+    # 8787 (REFRAME_PORT is fixed in the image). Keep the target at 8787.
     ports:
-      - "127.0.0.1:8787:8787"
+      - "${REFRAME_BIND_ADDRESS:-127.0.0.1}:${REFRAME_HOST_PORT:-8787}:8787"
     read_only: true
     tmpfs:
       - /tmp
