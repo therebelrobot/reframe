@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 # ---- build: compile the client and bundle the server into one file ----
-FROM node:24-alpine AS build
+FROM node:26-alpine AS build
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --no-audit --no-fund
@@ -12,7 +12,7 @@ COPY shared ./shared
 RUN npm run build
 
 # ---- runtime: node + the bundle, nothing else ----
-FROM node:24-alpine AS runtime
+FROM node:26-alpine AS runtime
 ENV NODE_ENV=production \
     REFRAME_PORT=8787 \
     REFRAME_DATA_DIR=/app/data \
