@@ -6,7 +6,7 @@
   "license": "Unlicense",
   "type": "module",
   "engines": {
-    "node": ">=22.13"
+    "node": ">=22.23.4"
   },
   "scripts": {
     "dev:server": "REFRAME_COOKIE_SECURE=false REFRAME_DATA_DIR=./data tsx watch server/main.ts",
@@ -30,7 +30,7 @@
     "hono": "4.13.13",
     "react": "19.3.0",
     "react-dom": "19.3.0",
-    "zod": "4.6.5"
+    "zod": "4.6.7"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
